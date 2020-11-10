@@ -7,7 +7,6 @@ import win32event
 import win32service
 import win32serviceutil
 import getpass
-import platform
 import logging
 import graypy
 
@@ -18,15 +17,16 @@ SEARCHING_NAME = 'консультант'
 
 
 class ConsFilter(logging.Filter):
+    active_time = 0
+
     def __init__(self):
         super().__init__()
         self.username = getpass.getuser()
-        self.pc_name = platform.uname().node
 
     def filter(self, record):
         record.username = self.username
-        record.pc_name = self.pc_name
         record.tag = "cons.exe"
+        record.active_time = ConsFilter.active_time
         return True
 
 
@@ -38,7 +38,8 @@ conslogger.addFilter(ConsFilter())
 
 
 def graylog_it(active_time: int) -> None:
-    conslogger.log(logging.INFO, active_time)
+    ConsFilter.active_time = active_time
+    conslogger.log(logging.DEBUG, f"Окно Консультант+ было открыто {active_time} сек.")
 
 
 def getForegroundWindowTitle(hwnd: int) -> Optional[str]:
